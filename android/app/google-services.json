@@ -1,0 +1,91 @@
+{
+  "project_info": {
+    "project_number": "404918018084",
+    "firebase_url": "https://freedom-transport-4db68vr-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "freedom-transport-4db68vr",
+    "storage_bucket": "freedom-transport-4db68vr.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404918018084:android:0e6e3096754c84a365b8b1",
+        "android_client_info": {
+          "package_name": "com.freedomtransport.vr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "404918018084-ukppfqaoaqbakk5te57ms6j8ike9r6t6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.freedomtransport.vr",
+            "certificate_hash": "4dfd8bcd3d2d0957d024eb3eb0e6f1c94e28381b"
+          }
+        },
+        {
+          "client_id": "404918018084-9p8vbi3e128haos7l8om7ktuq3l5rg37.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX-YpX5RMG9_x5tSjb2THhO0Q6rsu6Xro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "404918018084-9p8vbi3e128haos7l8om7ktuq3l5rg37.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "404918018084-1ed2vph18nb0b27ppugn9ueabc6vsaa3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.freedomtransport.vr"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:404918018084:android:95342dbd01fb3a7b65b8b1",
+        "android_client_info": {
+          "package_name": "com.freedomtransportdriver.vr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "404918018084-9p8vbi3e128haos7l8om7ktuq3l5rg37.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAX-YpX5RMG9_x5tSjb2THhO0Q6rsu6Xro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "404918018084-9p8vbi3e128haos7l8om7ktuq3l5rg37.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "404918018084-1ed2vph18nb0b27ppugn9ueabc6vsaa3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.freedomtransport.vr"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
