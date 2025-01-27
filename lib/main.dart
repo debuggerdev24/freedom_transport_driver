@@ -19,12 +19,12 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.data['push_type'].toString() == 'meta-request') {
     const intent = AndroidIntent(
       action: 'android.intent.action.MAIN',
-      package: 'com.freedomtransportdriver.vr',
+      package: 'com.freedomtransportdriver.app',
       category: 'android.intent.category.LAUNCHER',
     );
     await intent.launch();
 
-    log("antent=======>${intent}");
+    log("iantent=======>${intent}");
   }
 }
 
@@ -123,12 +123,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     platform = Theme.of(context).platform;
-
     return GestureDetector(
         onTap: () {
-          //remove keyboard on touching anywhere on the screen.
           FocusScopeNode currentFocus = FocusScope.of(context);
-
           if (!currentFocus.hasPrimaryFocus) {
             currentFocus.unfocus();
             FocusManager.instance.primaryFocus?.unfocus();

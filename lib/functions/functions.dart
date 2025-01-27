@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:developer' as d;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -60,8 +61,9 @@ String signKey = '';
 //base url
 String url =
     'http://cms.freedomtransport.com.au/'; //add '/' at the end of the url as 'https://url.com/'
-String mapkey =
-    (platform == TargetPlatform.android) ? 'AIzaSyDVd-7a3rcvyfeCqNH0zojzZx6FQsOpyD0' : 'AIzaSyDVd-7a3rcvyfeCqNH0zojzZx6FQsOpyD0';
+String mapkey = (platform == TargetPlatform.android)
+    ? 'AIzaSyDVd-7a3rcvyfeCqNH0zojzZx6FQsOpyD0'
+    : 'AIzaSyDVd-7a3rcvyfeCqNH0zojzZx6FQsOpyD0';
 
 String mapStyle = '';
 String mapType = '';
@@ -143,6 +145,7 @@ getlangid() async {
             },
             body: jsonEncode({'lang': choosenLanguage}));
     if (response.statusCode == 200) {
+      d.log("responseoflanfuage===========>${response.body}");
       if (jsonDecode(response.body)['success'] == true) {
         result = 'success';
       } else {
@@ -533,6 +536,32 @@ getServiceLocation() async {
   return res;
 }
 
+List getuserlist = [];
+List<int> userIds = [];
+
+getuser() async {
+  dynamic res;
+  try {
+    var response = await http.get(
+        Uri.parse('${url}api/v1/request/get-available-users'),
+        headers: {'Authorization': 'Bearer ${bearerToken[0].token}'});
+
+    if (response.statusCode == 200) {
+      getuserlist = jsonDecode(response.body);
+
+      d.log("getuserlist========>${getuserlist.toList()}");
+      res = 'success';
+    } else {
+      debugPrint(response.body);
+    }
+  } catch (e) {
+    if (e is SocketException) {
+      internet = false;
+      res = 'no internet';
+    }
+  }
+  return res;
+}
 //get vehicle type
 
 List vehicleType = [];
@@ -546,7 +575,9 @@ getvehicleType() async {
       Uri.parse(
           '${url}api/v1/types/$myServiceId?transport_type=$transportType'),
     );
-
+    // d.log("vehicaltype======>${response.body}");
+    // d.log("vehicaltype======>${myServiceId}");
+    // d.log("vehicaltype23======>${transportType}");
     if (response.statusCode == 200) {
       vehicleType = jsonDecode(response.body)['data'];
       res = 'success';
@@ -1237,8 +1268,10 @@ verifyUser(String number, int login, String password, String email, isOtp,
             : (login == 0)
                 ? {"mobile": number, "role": ischeckownerordriver}
                 : {"email": number, "role": ischeckownerordriver});
+
     if (response.statusCode == 200) {
       val = jsonDecode(response.body)['success'];
+      d.log("response=======>${response.body}");
       if (val == true) {
         if ((number != '' && email != '') || forgot == true) {
           if (forgot == true) {
@@ -1261,6 +1294,8 @@ verifyUser(String number, int login, String password, String email, isOtp,
         }
       } else {
         enabledModule = jsonDecode(response.body)['enabled_module'];
+        d.log("enabledModule=======>${enabledModule}");
+
         if (enabledModule != 'both') {
           transportType = enabledModule;
         } else {
@@ -1360,6 +1395,8 @@ driverLogin(number, login, password, isOtp) async {
                         : 'ios',
                     "role": ischeckownerordriver,
                   }));
+
+    d.log("responsedriver========>${response.body}");
     if (response.statusCode == 200) {
       var jsonVal = jsonDecode(response.body);
       if (ischeckownerordriver == 'driver') {
@@ -1423,8 +1460,11 @@ getUserDetails() async {
         'Authorization': 'Bearer ${bearerToken[0].token}'
       },
     );
+
+    d.log("get user detail =======>${response.body}");
     if (response.statusCode == 200) {
       userDetails = jsonDecode(response.body)['data'];
+      d.log("userdetailsupdateform1440========>${userDetails}");
       if (userDetails['notifications_count'] != 0 &&
           userDetails['notifications_count'] != null) {
         valueNotifierNotification.incrementNotifier();
@@ -1435,14 +1475,21 @@ getUserDetails() async {
       if (mapType == '') {
         mapType = userDetails['map_type'];
       }
+      d.log("userDetails=======>${userDetails['role']}");
       if (userDetails['role'] != 'owner') {
         if (userDetails['sos']['data'] != null) {
           sosData = userDetails['sos']['data'];
+
+          d.log("sosdata=======>${sosData}");
         }
         if (userDetails['onTripRequest'] != null) {
           addressList.clear();
           driverReq = userDetails['onTripRequest']['data'];
+          d.log(
+              "driverReq diverReq from onTripRequest=====>${userDetails['onTripRequest']['user_id']}");
+
           if (payby == 0 && driverReq['is_paid'] == 1) {
+            d.log("userDetails =======>${driverReq['is_paid'] == 1}");
             payby = 1;
             //audioPlayer.play(audio);
           }
@@ -1506,7 +1553,13 @@ getUserDetails() async {
           addressList.clear();
           driverReject = false;
           userReject = false;
+
+          d.log("setting diverReq from metaRequest");
           driverReq = userDetails['metaRequest']['data'];
+
+          d.log(
+              "setting diverReq from metaRequest==========>${userDetails['metaRequest']['data']}");
+
           tripStops =
               userDetails['metaRequest']['data']['requestStops']['data'];
           addressList.add(AddressList(
@@ -1629,6 +1682,7 @@ class BearerClass {
 }
 
 Map<String, dynamic> driverReq = {};
+Map<String, dynamic> greena = {};
 bool userReject = false;
 
 class ValueNotifying {
@@ -1698,6 +1752,8 @@ driverStatus() async {
         headers: {'Authorization': 'Bearer ${bearerToken[0].token}'});
     if (response.statusCode == 200) {
       userDetails = jsonDecode(response.body)['data'];
+
+      d.log("userdetailsdriverstatus======>${userDetails}");
       result = true;
       if (userDetails['active'] == false) {
         if (screenOn == true) {
@@ -2037,60 +2093,88 @@ bool polyAnimated = false;
 requestAccept() async {
   requestStreamEnd?.cancel();
   dynamic result;
+
   try {
     var response = await http.post(Uri.parse('${url}api/v1/request/respond'),
         headers: {
           'Authorization': 'Bearer ${bearerToken[0].token}',
           'Content-Type': 'application/json'
         },
-        body: jsonEncode({'request_id': driverReq['id'], 'is_accept': 1}));
+        body: jsonEncode({
+          'request_id': driverReq['id'],
+          'is_accept': 1,
+          "user_details": driverReq["user_details"]
+        }));
+
+    var responseJson = jsonDecode(response.body);
+
+    d.log("rtesponseofdriver =========>${response.body}");
 
     if (response.statusCode == 200) {
-      // FirebaseDatabase.instance.ref('request-meta/${driverReq['id']}').remove();
       driverReq.clear();
+      greena = responseJson;
 
-      // AwesomeNotifications().cancel(7425);
+      d.log("greena =========>${greena}");
 
-      if (jsonDecode(response.body)['message'] == 'success') {
-        if (audioPlayers.state != PlayerState.stopped) {
-          audioPlayers.stop();
-          // audioPlayers.dispose();
-        }
-        dropDistance = '';
-        polyline.clear();
-        fmpoly.clear();
-
-        await getUserDetails();
-        if (driverReq['drop_lat'] != null && mapType == 'google') {
-          getPolylines(false);
-        }
-
-        if (driverReq.isNotEmpty) {
-          FirebaseDatabase.instance
-              .ref()
-              .child('drivers/driver_${userDetails['id']}')
-              .update({'is_available': false});
-          duration = 0;
-          requestStreamStart?.cancel();
-          requestStreamStart = null;
-          requestStreamEnd?.cancel();
-          requestStreamEnd = null;
-          if (rideStreamStart == null ||
-              rideStreamStart?.isPaused == true ||
-              rideStreamChanges == null ||
-              rideStreamChanges?.isPaused == true) {
-            streamRide();
-          }
-          requestDetailsUpdate(double.parse(heading.toString()),
-              center.latitude, center.longitude);
-        }
-        valueNotifierHome.incrementNotifier();
+      if (audioPlayers.state != PlayerState.stopped) {
+        audioPlayers.stop();
       }
+
+      // Clear map data
+      dropDistance = '';
+      polyline.clear();
+      fmpoly.clear();
+
+      // Fetch user details and log them
+      await getUserDetails();
+
+      d.log("User Details: ${driverReq}");
+
+      // Log private details if available
+      if (responseJson['data'] != null &&
+          responseJson['data']['user_details'] != null) {
+        var requestdata = responseJson['data']['user_details'];
+        d.log("requestdata=======>${requestdata}");
+
+        return requestdata;
+      }
+      d.log("User Private Details: No private details found.");
+
+      if (driverReq['drop_lat'] != null && mapType == 'google') {
+        getPolylines(false);
+      }
+
+      if (driverReq.isNotEmpty) {
+        FirebaseDatabase.instance
+            .ref()
+            .child('drivers/driver_${userDetails['id']}')
+            .update({'is_available': false});
+
+        duration = 0;
+        requestStreamStart?.cancel();
+        requestStreamStart = null;
+        requestStreamEnd?.cancel();
+        requestStreamEnd = null;
+
+        if (rideStreamStart == null ||
+            rideStreamStart?.isPaused == true ||
+            rideStreamChanges == null ||
+            rideStreamChanges?.isPaused == true) {
+          streamRide();
+        }
+        requestDetailsUpdate(
+          double.parse(heading.toString()),
+          center.latitude,
+          center.longitude,
+        );
+      }
+      valueNotifierHome.incrementNotifier();
       result = 'success';
     } else if (response.statusCode == 401) {
       result = 'logout';
     } else {
-      if (jsonDecode(response.body)['message'] == 'request already cancelled') {
+      if (responseJson['message'] == 'request already cancelled') {
+        d.log("response.body ======>${response.body}");
         userReject = true;
         valueNotifierHome.incrementNotifier();
       }
@@ -2098,7 +2182,7 @@ requestAccept() async {
       driverReq = {};
       result = 'failed';
       valueNotifierHome.incrementNotifier();
-      debugPrint(response.body);
+      debugPrint("response.body");
     }
     return result;
   } catch (e) {
@@ -2109,7 +2193,110 @@ requestAccept() async {
   }
 }
 
-//driver request reject
+upcomingride() async {
+  requestStreamEnd?.cancel();
+  dynamic result;
+
+  try {
+    var response =
+        await http.post(Uri.parse('${url}api/v1/request/respond-upcoming-ride'),
+            headers: {
+              'Authorization': 'Bearer ${bearerToken[0].token}',
+              'Content-Type': 'application/json'
+            },
+            body: jsonEncode({
+              'request_id': driverReq['id'],
+              "user_details": driverReq["user_details"],
+            }));
+
+    d.log("requestupcomimg=========>${response}");
+
+    var responseJson = jsonDecode(response.body);
+
+    d.log("rtesponseofdriver =========>${response.body}");
+
+    if (response.statusCode == 200) {
+      driverReq.clear();
+      greena = responseJson;
+
+      d.log("greena =========>${greena}");
+
+      if (audioPlayers.state != PlayerState.stopped) {
+        audioPlayers.stop();
+      }
+
+      // Clear map data
+      dropDistance = '';
+      polyline.clear();
+      fmpoly.clear();
+
+      // Fetch user details and log them
+      await getUserDetails();
+
+      d.log("User Details: ${driverReq}");
+
+      // Log private details if available
+      if (responseJson['data'] != null &&
+          responseJson['data']['user_details'] != null) {
+        var requestdata = responseJson['data']['user_details'];
+        d.log("requestdata=======>${requestdata}");
+
+        return requestdata;
+      }
+      d.log("User Private Details: No private details found.");
+
+      if (driverReq['drop_lat'] != null && mapType == 'google') {
+        getPolylines(false);
+      }
+
+      if (driverReq.isNotEmpty) {
+        FirebaseDatabase.instance
+            .ref()
+            .child('drivers/driver_${userDetails['id']}')
+            .update({'is_available': false});
+
+        duration = 0;
+        requestStreamStart?.cancel();
+        requestStreamStart = null;
+        requestStreamEnd?.cancel();
+        requestStreamEnd = null;
+
+        if (rideStreamStart == null ||
+            rideStreamStart?.isPaused == true ||
+            rideStreamChanges == null ||
+            rideStreamChanges?.isPaused == true) {
+          streamRide();
+        }
+        requestDetailsUpdate(
+          double.parse(heading.toString()),
+          center.latitude,
+          center.longitude,
+        );
+      }
+      valueNotifierHome.incrementNotifier();
+      result = 'success';
+    } else if (response.statusCode == 401) {
+      result = 'logout';
+    } else {
+      if (responseJson['message'] == 'request already cancelled') {
+        d.log("response.body ======>${response.body}");
+        userReject = true;
+        valueNotifierHome.incrementNotifier();
+      }
+      await getUserDetails();
+      driverReq = {};
+      result = 'failed';
+      valueNotifierHome.incrementNotifier();
+      debugPrint("response.body");
+    }
+    return result;
+  } catch (e) {
+    if (e is SocketException) {
+      internet = false;
+      valueNotifierHome.incrementNotifier();
+    }
+  }
+}
 
 bool driverReject = false;
 
@@ -2287,8 +2474,7 @@ openMap(lat, lng) async {
 
     // ignore: deprecated_member_use
     if (await canLaunch(googleUrl)) {
-      // ignore: deprecated_member_use
-      await launch(googleUrl);
+      await launch(googleUrl,);
     }
   } catch (e) {
     if (e is SocketException) {
@@ -2334,6 +2520,7 @@ tripStart() async {
     if (response.statusCode == 200) {
       result = 'success';
       await getUserDetails();
+      d.log("message========>${response.body}");
       FirebaseDatabase.instance.ref('requests').child(driverReq['id']).update(
           {'trip_start': '1', 'modified_by_driver': ServerValue.timestamp});
       valueNotifierHome.incrementNotifier();
@@ -2446,31 +2633,38 @@ class AddressList {
 Map etaDetails = {};
 
 //eta request
-
-etaRequest() async {
+etaRequest(selectedUserId) async {
   dynamic result;
   try {
-    var response = await http.post(Uri.parse('${url}api/v1/request/eta'),
-        headers: {
-          'Authorization': 'Bearer ${bearerToken[0].token}',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'pick_lat':
-              addressList.firstWhere((e) => e.type == 'pickup').latlng.latitude,
-          'pick_lng': addressList
-              .firstWhere((e) => e.type == 'pickup')
-              .latlng
-              .longitude,
-          'drop_lat':
-              addressList.firstWhere((e) => e.type == 'drop').latlng.latitude,
-          'drop_lng':
-              addressList.firstWhere((e) => e.type == 'drop').latlng.longitude,
-          'ride_type': 1
-        }));
+    var payload = {
+      'pick_lat':
+          addressList.firstWhere((e) => e.type == 'pickup').latlng.latitude,
+      'pick_lng':
+          addressList.firstWhere((e) => e.type == 'pickup').latlng.longitude,
+      'drop_lat':
+          addressList.firstWhere((e) => e.type == 'drop').latlng.latitude,
+      'drop_lng':
+          addressList.firstWhere((e) => e.type == 'drop').latlng.longitude,
+      'ride_type': 1,
+      'username': selectedUserId,
+    };
+
+    debugPrint("Payload being sent: ${jsonEncode(payload)}");
+
+    var response = await http.post(
+      Uri.parse('${url}api/v1/request/eta'),
+      headers: {
+        'Authorization': 'Bearer ${bearerToken[0].token}',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(payload),
+    );
+    // Print the payload
+    debugPrint("Payload being sent: ${jsonEncode(payload)}");
 
     if (response.statusCode == 200) {
       etaDetails = jsonDecode(response.body)['data'];
+      d.log("etadetails========>${response.body}");
       result = true;
       valueNotifierHome.incrementNotifier();
     } else if (response.statusCode == 401) {
@@ -2524,7 +2718,7 @@ geoCodingForLatLng(id, sessionToken) async {
 
 //create request
 
-createRequest(name, phone) async {
+createRequest(name, selectedUserId) async {
   dynamic result;
   try {
     var response = await http.post(
@@ -2550,13 +2744,15 @@ createRequest(name, phone) async {
           'drop_address':
               addressList.firstWhere((e) => e.type == 'drop').address,
           'name': name,
-          'mobile': phone,
+          'username': selectedUserId,
           'poly_line': polyString,
           'request_eta_amount': etaDetails['total'].toString()
         }));
     if (response.statusCode == 200) {
       // await getUserDetails();
+      d.log("intstatride=======>${response.body}");
       result = 'success';
+      // getUserDetails();
     } else if (response.statusCode == 401) {
       result = 'logout';
     } else {
@@ -2814,6 +3010,7 @@ endTrip() async {
               ? (waitingAfterTime / 60).toInt()
               : 0
         }));
+
     if (response.statusCode == 200) {
       await getUserDetails();
       FirebaseDatabase.instance.ref('requests').child(reqId).update(
@@ -3570,6 +3767,9 @@ getHistory() async {
         headers: {'Authorization': 'Bearer ${bearerToken[0].token}'});
 
     if (response.statusCode == 200) {
+      d.log("getHistory${response.body}");
+
+      d.log("historyFiltter=======>${historyFiltter}");
       myHistory = jsonDecode(response.body)['data'];
       myHistoryPage = jsonDecode(response.body)['meta'];
       result = 'success';
@@ -4636,6 +4836,7 @@ streamRequest() {
     requestStreamStart?.cancel();
     requestStreamStart = null;
   }).listen((event) {
+    d.log("listeninig request-meta");
     if (driverReq.isEmpty) {
       rideStreamStart?.cancel();
       rideStreamChanges?.cancel();
@@ -4646,6 +4847,10 @@ streamRequest() {
       requestStreamStart = null;
       requestStreamEnd = null;
       streamEnd(event.snapshot.key.toString());
+      d.log(
+          "driver req is empty - getting user details again =======>${userDetails['id']}");
+      d.log(
+          "driver req is empty - getting user details again 123=======>${userDetails['driver_id']}");
       getUserDetails();
     }
   });
@@ -4756,6 +4961,7 @@ getadminCurrentMessages() async {
       },
     );
     if (response.statusCode == 200) {
+      d.log("getadminCurrentMessages========>${response.body}");
       adminChatList.clear();
       isnewchat = jsonDecode(response.body)['data']['new_chat'];
       adminChatList = jsonDecode(response.body)['data']['chats'];
@@ -5232,7 +5438,6 @@ emailVerify(String email, otpNumber) async {
       if (jsonDecode(response.body)['success'] == true) {
         val = 'success';
       } else {
-        debugPrint(response.body);
         val = jsonDecode(response.body)['message'];
       }
     } else if (response.statusCode == 422) {
@@ -5264,6 +5469,43 @@ paymentReceived() async {
               'Content-Type': 'application/json',
             },
             body: jsonEncode({'request_id': driverReq['id']}));
+
+    d.log("response123==========>${response.body}");
+    if (response.statusCode == 200) {
+      // userCancelled = true;
+      FirebaseDatabase.instance
+          .ref('requests')
+          .child(driverReq['id'])
+          .update({'modified_by_driver': ServerValue.timestamp});
+      await getUserDetails();
+      result = 'success';
+      valueNotifierHome.incrementNotifier();
+    } else if (response.statusCode == 401) {
+      result = 'logout';
+    } else {
+      debugPrint(response.body);
+      result = 'failed';
+    }
+  } catch (e) {
+    if (e is SocketException) {
+      internet = false;
+    }
+  }
+  return result;
+}
+
+payemtconfirm() async {
+  dynamic result;
+  try {
+    var response = await http.post(
+        Uri.parse('${url}api/v1/request/payment-confirm-special'),
+        headers: {
+          'Authorization': 'Bearer ${bearerToken[0].token}',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'request_id': driverReq['id']}));
+
+    d.log("payemtconfirm==========>${response.body}");
     if (response.statusCode == 200) {
       // userCancelled = true;
       FirebaseDatabase.instance
@@ -5297,7 +5539,7 @@ getOwnermodule() async {
     final response = await http.get(
       Uri.parse('${url}api/v1/common/modules'),
     );
-
+    d.log("response123=======>${response.body}");
     if (response.statusCode == 200) {
       ownermodule = jsonDecode(response.body)['enable_owner_login'];
       isemailmodule = jsonDecode(response.body)['enable_email_otp'];
@@ -5321,8 +5563,10 @@ sendOTPtoMobile(String mobile, String countryCode) async {
   try {
     var response = await http.post(Uri.parse('${url}api/v1/mobile-otp'),
         body: {'mobile': mobile, 'country_code': countryCode});
+    d.log("responsesendotp======>${response.body}");
     if (response.statusCode == 200) {
       if (jsonDecode(response.body)['success'] == true) {
+        print("response=============  ${response.body}");
         result = 'success';
       } else {
         debugPrint(response.body);

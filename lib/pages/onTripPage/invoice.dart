@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_driver/pages/login/login.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,8 +25,10 @@ class _InvoiceState extends State<Invoice> {
   bool _isLoading = false;
   @override
   void initState() {
-    if (driverReq['is_paid'] == 0) {
+    if (driverReq['is_paid'] == 1) {
       payby = 0;
+      log("`driverReq['is_paid'] =======>${driverReq['is_paid']}");
+      log("`payby =======>${payby}");
     }
     super.initState();
   }
@@ -1013,18 +1017,24 @@ class _InvoiceState extends State<Invoice> {
                                   Row(
                                     children: [
                                       Text(
-                                        (driverReq['payment_opt'] == '1')
-                                            ? languages[choosenLanguage]
-                                                ['text_cash']
-                                            : (driverReq['payment_opt'] == '2')
+                                        (driverReq['userDetail']?['data']
+                                                    ?['is_private'] ??
+                                                false)
+                                            ? (driverReq['payment_opt'] == '1')
                                                 ? languages[choosenLanguage]
-                                                    ['text_wallet']
-                                                : languages[choosenLanguage]
-                                                    ['text_card'],
+                                                    ['text_cash']
+                                                : (driverReq['payment_opt'] ==
+                                                        '2')
+                                                    ? languages[choosenLanguage]
+                                                        ['text_wallet']
+                                                    : languages[choosenLanguage]
+                                                        ['text_card']
+                                            : "Invoice",
                                         style: GoogleFonts.notoSans(
-                                            fontSize: media.width * sixteen,
-                                            color: buttonColor,
-                                            fontWeight: FontWeight.bold),
+                                          fontSize: media.width * sixteen,
+                                          color: buttonColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       SizedBox(
                                         width: media.width * 0.02,
@@ -1042,84 +1052,127 @@ class _InvoiceState extends State<Invoice> {
                                       ),
                                     ],
                                   ),
+
                                   SizedBox(
                                     width: media.width * 0.02,
                                   ),
                                   Expanded(
-                                      child: (driverReq['payment_opt'] == '0' &&
-                                              driverReq['is_paid'] == 0)
-                                          ? Container(
-                                              height: media.width * 0.12,
-                                              // width: media.width * 0.9,
-                                              padding: EdgeInsets.only(
-                                                  left: media.width * 0.03,
-                                                  right: media.width * 0.03),
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          media.width * 0.08),
-                                                  color: borderLines),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  // Text(
-                                                  //   languages[choosenLanguage][
-                                                  //       'text_waitingforpayment'],
-                                                  //   style: GoogleFonts.notoSans(
-                                                  //       fontSize: media.width *
-                                                  //           fourteen,
-                                                  //       fontWeight:
-                                                  //           FontWeight.w600),
-                                                  //   textAlign: TextAlign.center,
-                                                  //   maxLines: 1,
-                                                  // ),
-                                                  SizedBox(
-                                                    width: media.width * 0.02,
-                                                  ),
-                                                  SizedBox(
-                                                      height:
-                                                          media.width * 0.05,
-                                                      width: media.width * 0.05,
-                                                      child:
-                                                          const CircularProgressIndicator())
-                                                ],
-                                              ),
-                                            )
-                                          : Button(
-                                              onTap: () async {
-                                                if (driverReq['is_paid'] == 0) {
-                                                  setState(() {
-                                                    _error = '';
-                                                    _isLoading = true;
-                                                  });
+                                    child: (driverReq['payment_opt'] == '0' &&
+                                            driverReq['is_paid'] == 0 &&
+                                            (driverReq['userDetail']?['data']
+                                                    ?['is_private'] ??
+                                                false))
+                                        ? Container(
+                                            height: media.width * 0.12,
+                                            padding: EdgeInsets.symmetric(
+                                                horizontal: media.width * 0.03),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      media.width * 0.08),
+                                              color: borderLines,
+                                            ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                SizedBox(
+                                                    width: media.width * 0.02),
+                                                SizedBox(
+                                                  height: media.width * 0.05,
+                                                  width: media.width * 0.05,
+                                                  child:
+                                                      const CircularProgressIndicator(),
+                                                ),
+                                              ],
+                                            ),
+                                          )
+                                        : Button(
+                                            onTap: () async {
+                                              setState(() {
+                                                _isLoading = true;
+                                                _error = '';
+                                              });
+
+                                              bool isPrivate =
+                                                  driverReq['userDetail']
+                                                              ?['data']
+                                                          ?['is_private'] ??
+                                                      false;
+
+                                              if (!isPrivate) {
+                                                await payemtconfirm();
+                                              }
+
+                                              if (isPrivate) {
+                                                if (driverReq['is_paid'] == 1 ||
+                                                    driverReq['is_paid'] ==
+                                                        true) {
+                                                  log("driverReq=> 4");
+
                                                   var val =
                                                       await paymentReceived();
+                                                  log("payment received=======>${val}");
+
                                                   if (val == 'logout') {
                                                     navigateLogout();
                                                   } else if (val == 'success') {
-                                                    setState(() {
-                                                      _isLoading = false;
-                                                    });
-                                                  } else {
-                                                    setState(() {
-                                                      _isLoading = false;
-                                                      _error = val.toString();
-                                                    });
-                                                  }
-                                                } else {
-                                                  Navigator.push(
+                                                    Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                           builder: (context) =>
-                                                              const Review()));
+                                                              const Review()),
+                                                    );
+                                                  } else {
+                                                    setState(() {
+                                                      _error = val.toString();
+                                                    });
+                                                  }
                                                 }
-                                              },
-                                              text: (driverReq['is_paid'] == 0)
-                                                  ? languages[choosenLanguage]
-                                                      ['text_payment_received']
-                                                  : languages[choosenLanguage]
-                                                      ['text_confirm']))
+                                              } else {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const Review()),
+                                                );
+                                              }
+
+                                              setState(() {
+                                                _isLoading = false;
+                                              });
+                                            },
+                                            text: (driverReq['payment_opt'] ==
+                                                        '0' &&
+                                                    driverReq['is_paid'] == 0 &&
+                                                    (driverReq['userDetail']
+                                                                ?['data']
+                                                            ?['is_private'] ??
+                                                        false))
+                                                ? languages[choosenLanguage]
+                                                    ['text_loading']
+                                                : (driverReq['userDetail']
+                                                                ?['data']
+                                                            ?['is_private'] ??
+                                                        false)
+                                                    ? languages[choosenLanguage]
+                                                        [
+                                                        'text_payment_received']
+                                                    : languages[choosenLanguage]
+                                                        ['text_confirm'],
+                                          ),
+                                  )
+
+                                  // Button(
+                                  //     onTap: () {
+                                  //       Navigator.push(
+                                  //         context,
+                                  //         MaterialPageRoute(
+                                  //             builder: (context) =>
+                                  //                 const Review()),
+                                  //       );
+                                  //     },
+                                  //     text: "Demo")
                                 ],
                               ),
                             ],

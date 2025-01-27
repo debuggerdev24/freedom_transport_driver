@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
+import 'dart:developer' as d;
 import 'package:dash_bubble/dash_bubble.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_driver/pages/login/landingpage.dart';
 import 'package:flutter_driver/pages/login/login.dart';
 import 'package:flutter_driver/pages/onTripPage/droplocation.dart';
+import 'package:flutter_driver/pages/onTripPage/mapscreen.dart';
 import 'package:geolocator/geolocator.dart' as geolocator;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -68,7 +70,6 @@ bool unloadImage = false;
 String driverOtp = '';
 bool serviceEnabled = false;
 bool show = true;
-
 int filtericon = 0;
 dynamic isAvailable;
 List vechiletypeslist = [];
@@ -110,6 +111,7 @@ class _MapsState extends State<Maps>
   bool _showWaitingInfo = false;
   bool _isLoading = false;
   bool _reqCancelled = false;
+  bool _isaccept = true;
   bool navigated = false;
   dynamic pinLocationIcon;
   dynamic pinLocationIcon2;
@@ -146,6 +148,7 @@ class _MapsState extends State<Maps>
   @override
   void initState() {
     WidgetsBinding.instance.addObserver(this);
+
     DashBubble.instance.stopBubble();
     myMarkers = [];
     show = true;
@@ -176,18 +179,18 @@ class _MapsState extends State<Maps>
     }
   }
 
-
   getonlineoffline() async {
     if (userDetails['role'] == 'driver' &&
         userDetails['owner_id'] != null &&
-        (userDetails['vehicle_type_id'] == null && userDetails['vehicle_types'] == []) &&
+        (userDetails['vehicle_type_id'] == null &&
+            userDetails['vehicle_types'] == []) &&
         userDetails['active'] == true) {
-     
-        var val = await driverStatus();
-        if (val == 'logout') {
-          navigateLogout();
-        }
-      
+      var val = await driverStatus();
+
+      if (val == 'logout') {
+        d.log("val=========>${userDetails['vehicle_type_id']}");
+        navigateLogout();
+      }
     }
   }
 
@@ -496,8 +499,10 @@ class _MapsState extends State<Maps>
 
       if (gettingPerm > 1) {
         locationAllowed = false;
+
         if (userDetails['active'] == true) {
           var val = await driverStatus();
+          d.log("driverStatus=======>${val}");
           if (val == 'logout') {
             navigateLogout();
           }
@@ -505,6 +510,7 @@ class _MapsState extends State<Maps>
         state = '3';
       } else {
         state = '2';
+        d.log("state======>${state}");
       }
       setState(() {
         _isLoading = false;
@@ -526,6 +532,7 @@ class _MapsState extends State<Maps>
         final Uint8List onridebikeicon1;
         // if(userDetails['transport_type'] == 'taxi'){
         markerIcon = await getBytesFromAsset('assets/images/top-taxi.png', 40);
+
         markerIcon2 = await getBytesFromAsset('assets/images/bike.png', 40);
         markerIcon3 =
             await getBytesFromAsset('assets/images/vehicle-marker.png', 40);
@@ -564,7 +571,9 @@ class _MapsState extends State<Maps>
           var locs = await geolocator.Geolocator.getLastKnownPosition();
           if (locs != null) {
             center = LatLng(locs.latitude, locs.longitude);
+           
             heading = locs.heading;
+        
           } else {
             loc = await geolocator.Geolocator.getCurrentPosition(
                 desiredAccuracy: geolocator.LocationAccuracy.low);
@@ -573,10 +582,12 @@ class _MapsState extends State<Maps>
             heading = loc.heading;
           }
           if (driverReq.isEmpty && choosenRide.isEmpty) {
+         
             _controller
                 ?.animateCamera(CameraUpdate.newLatLngZoom(center, 14.0));
           }
           if (userDetails['metaRequest'] != null) {
+            d.log("userdetails==========>${userDetails['metaRequest']}");
             aproximateDistance1 = calculateDistance(center.latitude,
                 center.longitude, driverReq['pick_lat'], driverReq['pick_lng']);
             aproximateDistance =
@@ -584,12 +595,14 @@ class _MapsState extends State<Maps>
           }
         }
         if (mounted) {
+        
           setState(() {
             pinLocationIcon = BitmapDescriptor.fromBytes(markerIcon);
             pinLocationIcon2 = BitmapDescriptor.fromBytes(markerIcon2);
             pinLocationIcon3 = BitmapDescriptor.fromBytes(markerIcon3);
 
             if (myMarkers.isEmpty && userDetails['role'] != 'owner') {
+              
               myMarkers = [
                 Marker(
                     markerId: const MarkerId('1'),
@@ -602,24 +615,31 @@ class _MapsState extends State<Maps>
                             : pinLocationIcon3,
                     anchor: const Offset(0.5, 0.5))
               ];
+              
             }
-          });
+          }
+          
+          );
+          
         }
       }
 
       if (makeOnline == true && userDetails['active'] == false) {
+        d.log("makeOnline======>${makeOnline}");
         var val = await driverStatus();
         if (val == 'logout') {
           navigateLogout();
         }
       }
       makeOnline = false;
+       d.log("makeOnline======>${makeOnline}");
       if (mounted) {
         setState(() {
           locationAllowed = true;
           state = '3';
           _isLoading = false;
         });
+           d.log("state======>${state}");
       }
       if (choosenRide.isNotEmpty || driverReq.isNotEmpty) {}
     }
@@ -1019,6 +1039,7 @@ class _MapsState extends State<Maps>
                       (route) => false);
                 });
               }
+              d.log("userDetails before stream builder => ${userDetails['role']}");
               return Directionality(
                 textDirection: (languageDirection == 'rtl')
                     ? TextDirection.rtl
@@ -1031,7 +1052,7 @@ class _MapsState extends State<Maps>
                           width: media.width * 1,
                           color: Colors.transparent),
                   body: StreamBuilder(
-                      stream: userDetails['role'] == 'owner'
+                      stream: userDetails['role'] == 'owner' 
                           ? FirebaseDatabase.instance
                               .ref('drivers')
                               .orderByChild('ownerid')
@@ -1042,7 +1063,9 @@ class _MapsState extends State<Maps>
                         if (event.hasData) {
                           driverData.clear();
                           for (var element in event.data!.snapshot.children) {
+                            d.log("element======>${element.value}");
                             driverData.add(element.value);
+                            d.log("driverData======>${driverData}");
                           }
 
                           for (var element in driverData) {
@@ -2894,7 +2917,6 @@ class _MapsState extends State<Maps>
                                                                     InkWell(
                                                                       onTap:
                                                                           () async {
-
                                                                         if (userDetails['transport_type'].toString() ==
                                                                                 'taxi' ||
                                                                             userDetails['enable_modules_for_applications'] ==
@@ -2902,6 +2924,7 @@ class _MapsState extends State<Maps>
                                                                           var val = await geoCoding(
                                                                               center.latitude,
                                                                               center.longitude);
+
                                                                           setState(
                                                                               () {
                                                                             if (addressList.where((element) => element.type == 'pickup').isNotEmpty) {
@@ -2911,11 +2934,11 @@ class _MapsState extends State<Maps>
                                                                             } else {
                                                                               addressList.add(AddressList(id: '1', type: 'pickup', address: val, latlng: LatLng(center.latitude, center.longitude)));
                                                                             }
+                                                                            d.log("adddresslist =========>${val}");
                                                                           });
                                                                           if (addressList
                                                                               .isNotEmpty) {
-                                                                            Navigator.push(
-                                                                                context,
+                                                                            Navigator.push(context,
                                                                                 MaterialPageRoute(builder: (context) => const DropLocation()));
                                                                           }
                                                                         } else if (userDetails['transport_type'].toString() ==
@@ -2935,8 +2958,10 @@ class _MapsState extends State<Maps>
                                                                               addressList.add(AddressList(id: '1', type: 'pickup', address: val, latlng: LatLng(center.latitude, center.longitude)));
                                                                             }
                                                                           });
+                                                                              getuser();
                                                                           if (addressList
                                                                               .isNotEmpty) {
+                                                                            
                                                                             Navigator.push(
                                                                                 context,
                                                                                 MaterialPageRoute(
@@ -3045,12 +3070,13 @@ class _MapsState extends State<Maps>
                                                                                     children: [
                                                                                       InkWell(
                                                                                         onTap: () {
-                                                                                          if (driverReq['is_trip_start'] == 0) {
-                                                                                            openMap(driverReq['pick_lat'], driverReq['pick_lng']);
-                                                                                          }
-                                                                                          if (tripStops.isEmpty && driverReq['is_trip_start'] != 0) {
-                                                                                            openMap(driverReq['drop_lat'], driverReq['drop_lng']);
-                                                                                          }
+                                                                                          Navigator.push(context,MaterialPageRoute(builder: (context) => WebviewScreen(url: 'https://www.google.com/maps/search/?api=1&query=${driverReq['pick_lat']},${ driverReq['pick_lng']}',) ));
+                                                                                          // if (driverReq['is_trip_start'] == 0) {
+                                                                                            // openMap(driverReq['pick_lat'], driverReq['pick_lng']);
+                                                                                          // }
+                                                                                          // if (tripStops.isEmpty && driverReq['is_trip_start'] != 0) {
+                                                                                          //   openMap(driverReq['drop_lat'], driverReq['drop_lng']);
+                                                                                          // }
                                                                                         },
                                                                                         child: SizedBox(
                                                                                           width: media.width * 00.07,
@@ -3653,14 +3679,15 @@ class _MapsState extends State<Maps>
                                                                                                                             width: media.width * 0.02,
                                                                                                                           ),
                                                                                                                           MyText(
-                                                                                                                            text: (driverReq['payment_opt'].toString() == '1')
-                                                                                                                                ? languages[choosenLanguage]['text_cash']
-                                                                                                                                : (driverReq['payment_opt'].toString() == '2')
-                                                                                                                                    ? languages[choosenLanguage]['text_wallet']
-                                                                                                                                    : (driverReq['payment_opt'].toString() == '0')
-                                                                                                                                        ? languages[choosenLanguage]['text_card']
-                                                                                                                                        : languages[choosenLanguage]['text_upi'],
-                                                                                                                            // driverReq['payment_type_string'].toString(),
+                                                                                                                            text: (driverReq['userDetail']?['data']?['is_private'] ?? false)
+                                                                                                                                ? (driverReq['payment_opt'].toString() == '1')
+                                                                                                                                    ? languages[choosenLanguage]['text_cash']
+                                                                                                                                    : (driverReq['payment_opt'].toString() == '2')
+                                                                                                                                        ? languages[choosenLanguage]['text_wallet']
+                                                                                                                                        : (driverReq['payment_opt'].toString() == '0')
+                                                                                                                                            ? languages[choosenLanguage]['text_card']
+                                                                                                                                            : languages[choosenLanguage]['text_upi']
+                                                                                                                                : "Invoice",
                                                                                                                             size: media.width * sixteen,
                                                                                                                           ),
                                                                                                                         ],
@@ -3957,12 +3984,18 @@ class _MapsState extends State<Maps>
                                                                                                         setState(() {
                                                                                                           _isLoading = true;
                                                                                                         });
-                                                                                                        await requestAccept();
+
+                                                                                                        if (driverReq['is_later'] == 1) {
+                                                                                                          await upcomingride();
+                                                                                                        } else {
+                                                                                                          await requestAccept();
+                                                                                                        }
+
                                                                                                         setState(() {
                                                                                                           _isLoading = false;
                                                                                                         });
                                                                                                       },
-                                                                                                      text: languages[choosenLanguage]['text_accept'],
+                                                                                                      text: (driverReq['is_later'] == 1) ? "scheduled" : languages[choosenLanguage]['text_accept'],
                                                                                                       width: media.width * 0.4,
                                                                                                     )
                                                                                                   ],
@@ -4163,40 +4196,40 @@ class _MapsState extends State<Maps>
                                                                                 (driverReq['is_driver_arrived'] == 1 && waitingTime != null)
                                                                                     ? (waitingTime / 60 >= 1)
                                                                                         ? Container(
-                                                                                          padding: EdgeInsets.all(media.width * 0.03),
-                                                                                          decoration: BoxDecoration(color: topBar, borderRadius: BorderRadius.circular(media.width * 0.02), border: Border.all(color: Colors.grey.withOpacity(0.5))),
-                                                                                          child: (driverReq['accepted_at'] == null && driverReq['show_request_eta_amount'] == true && driverReq['request_eta_amount'] != null)
-                                                                                              ? MyText(
-                                                                                                  text: userDetails['currency_symbol'] + driverReq['request_eta_amount'].toString(),
-                                                                                                  size: media.width * fourteen,
-                                                                                                  color: isDarkTheme == true ? Colors.black : textColor,
-                                                                                                )
-                                                                                              : (driverReq['is_driver_arrived'] == 1 && waitingTime != null)
-                                                                                                  ? (waitingTime / 60 >= 1)
-                                                                                                      ? Column(
-                                                                                                          children: [
-                                                                                                            MyText(text: 'Waiting Time', size: media.width * twelve),
-                                                                                                            SizedBox(
-                                                                                                              height: media.width * 0.015,
-                                                                                                            ),
-                                                                                                            Row(
-                                                                                                              children: [
-                                                                                                                Icon(
-                                                                                                                  Icons.alarm_outlined,
-                                                                                                                  size: media.width * fourteen,
-                                                                                                                ),
-                                                                                                                MyText(
-                                                                                                                  text: '${(waitingTime / 60).toInt()} ${languages[choosenLanguage]['text_mins']}',
-                                                                                                                  size: media.width * twelve,
-                                                                                                                  color: isDarkTheme == true ? Colors.black : textColor,
-                                                                                                                ),
-                                                                                                              ],
-                                                                                                            ),
-                                                                                                          ],
-                                                                                                        )
-                                                                                                      : Container()
-                                                                                                  : Container(),
-                                                                                        )
+                                                                                            padding: EdgeInsets.all(media.width * 0.03),
+                                                                                            decoration: BoxDecoration(color: topBar, borderRadius: BorderRadius.circular(media.width * 0.02), border: Border.all(color: Colors.grey.withOpacity(0.5))),
+                                                                                            child: (driverReq['accepted_at'] == null && driverReq['show_request_eta_amount'] == true && driverReq['request_eta_amount'] != null)
+                                                                                                ? MyText(
+                                                                                                    text: userDetails['currency_symbol'] + driverReq['request_eta_amount'].toString(),
+                                                                                                    size: media.width * fourteen,
+                                                                                                    color: isDarkTheme == true ? Colors.black : textColor,
+                                                                                                  )
+                                                                                                : (driverReq['is_driver_arrived'] == 1 && waitingTime != null)
+                                                                                                    ? (waitingTime / 60 >= 1)
+                                                                                                        ? Column(
+                                                                                                            children: [
+                                                                                                              MyText(text: 'Waiting Time', size: media.width * twelve),
+                                                                                                              SizedBox(
+                                                                                                                height: media.width * 0.015,
+                                                                                                              ),
+                                                                                                              Row(
+                                                                                                                children: [
+                                                                                                                  Icon(
+                                                                                                                    Icons.alarm_outlined,
+                                                                                                                    size: media.width * fourteen,
+                                                                                                                  ),
+                                                                                                                  MyText(
+                                                                                                                    text: '${(waitingTime / 60).toInt()} ${languages[choosenLanguage]['text_mins']}',
+                                                                                                                    size: media.width * twelve,
+                                                                                                                    color: isDarkTheme == true ? Colors.black : textColor,
+                                                                                                                  ),
+                                                                                                                ],
+                                                                                                              ),
+                                                                                                            ],
+                                                                                                          )
+                                                                                                        : Container()
+                                                                                                    : Container(),
+                                                                                          )
                                                                                         : Container()
                                                                                     : Container(),
                                                                               ],
@@ -4369,6 +4402,85 @@ class _MapsState extends State<Maps>
                                                                               SizedBox(
                                                                                 height: media.width * 0.03,
                                                                               ),
+                                                                                if(greena.isNotEmpty)
+                                                                              Container(
+                                                                                width: media.width * 0.9,
+                                                                                padding: EdgeInsets.all(media.width * 0.03),
+                                                                                decoration: BoxDecoration(
+                                                                                  color: Colors.grey.withOpacity(0.1),
+                                                                                  borderRadius: BorderRadius.circular(media.width * 0.02),
+                                                                                ),
+                                                                                child: Column(
+                                                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                  children: [
+                                                                                    MyText(
+                                                                                      text: "Health Information",
+                                                                                      size: media.width * fourteen,
+                                                                                      fontweight: FontWeight.w600,
+                                                                                      color: textColor,
+                                                                                    ),
+                                                                                    SizedBox(height: media.width * 0.025),
+                                                                                    if(greena.isNotEmpty)
+                                                                                    Column(
+                                                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                      children: [
+                                                                                        SizedBox(height: media.width * 0.025),
+                                                                                        if (greena['data']['user_details'] != null)
+                                                                                          Column(
+                                                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                                                            children: [
+                                                                                              if (greena['data']['user_details']['user_ndis'] != null && greena['data']['user_details']['user_ndis']['other'] != null)
+                                                                                                MyText(
+                                                                                                  text: "${greena['data']['user_details']['user_ndis']['other']}",
+                                                                                                  size: media.width * sixteen,
+                                                                                                  fontweight: FontWeight.w400,
+                                                                                                  color: Colors.black,
+                                                                                                ),
+                                                                                              if (greena['data']['user_details']['user_niisq'] != null && greena['data']['user_details']['user_niisq']['other'] != null)
+                                                                                                MyText(
+                                                                                                  text: "${greena['data']['user_details']['user_niisq']['other']}",
+                                                                                                  size: media.width * sixteen,
+                                                                                                  fontweight: FontWeight.w400,
+                                                                                                  color: Colors.black,
+                                                                                                ),
+                                                                                              if (greena['data']['user_details']['user_aged_care'] != null && greena['data']['user_details']['user_aged_care']['other'] != null)
+                                                                                                MyText(
+                                                                                                  text: "${greena['data']['user_details']['user_aged_care']['other']}",
+                                                                                                  size: media.width * sixteen,
+                                                                                                  fontweight: FontWeight.w400,
+                                                                                                  color: Colors.black,
+                                                                                                ),
+                                                                                              if (greena['data']['user_details']['user_private'] != null && greena['data']['user_details']['user_private']['other'] != null)
+                                                                                                MyText(
+                                                                                                  text: "${greena['data']['user_details']['user_private']['other']}",
+                                                                                                  size: media.width * sixteen,
+                                                                                                  fontweight: FontWeight.w400,
+                                                                                                  color: Colors.black,
+                                                                                                ),
+                                                                                              if ((greena['data']['user_details']['user_ndis'] == null || greena['data']['user_details']['user_ndis']['other'] == null) && (greena['data']['user_details']['user_niisq'] == null || greena['data']['user_details']['user_niisq']['other'] == null) && (greena['data']['user_details']['user_aged_care'] == null || greena['data']['user_details']['user_aged_care']['other'] == null) && (greena['data']['user_details']['user_private'] == null || greena['data']['user_details']['user_private']['other'] == null))
+                                                                                                MyText(
+                                                                                                  text: "No health information available.",
+                                                                                                  size: media.width * sixteen,
+                                                                                                  fontweight: FontWeight.w400,
+                                                                                                  color: Colors.red,
+                                                                                                ),
+                                                                                            ],
+                                                                                          )
+                                                                                        else
+                                                                                          MyText(
+                                                                                            text: "No information available.",
+                                                                                            size: media.width * sixteen,
+                                                                                            fontweight: FontWeight.w400,
+                                                                                            color: Colors.red,
+                                                                                          ),
+                                                                                        SizedBox(height: media.width * 0.02),
+                                                                                      ],
+                                                                                    ),
+                                                                                    SizedBox(height: media.width * 0.02),
+                                                                                  ],
+                                                                                ),
+                                                                              ),
+                                                                              SizedBox(height: media.height * 0.025),
                                                                               (driverReq['is_trip_start'] == 1)
                                                                                   ? Container()
                                                                                   : Row(
@@ -4962,32 +5074,44 @@ class _MapsState extends State<Maps>
                                                                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                                   children: [
                                                                                                     Expanded(
-                                                                                                      child: Row(
-                                                                                                        children: [
-                                                                                                          Image.asset(
-                                                                                                            (driverReq['payment_opt'].toString() == '1')
-                                                                                                                ? 'assets/images/cash.png'
-                                                                                                                : (driverReq['payment_opt'].toString() == '2')
-                                                                                                                    ? 'assets/images/wallet.png'
-                                                                                                                    : 'assets/images/card.png',
-                                                                                                            width: media.width * 0.07,
-                                                                                                            height: media.width * 0.07,
-                                                                                                            fit: BoxFit.contain,
-                                                                                                          ),
-                                                                                                          SizedBox(
-                                                                                                            width: media.width * 0.02,
-                                                                                                          ),
-                                                                                                          MyText(
-                                                                                                              text: (driverReq['payment_opt'].toString() == '1')
-                                                                                                                  ? languages[choosenLanguage]['text_cash']
-                                                                                                                  : (driverReq['payment_opt'].toString() == '2')
-                                                                                                                      ? languages[choosenLanguage]['text_wallet']
-                                                                                                                      : languages[choosenLanguage]['text_card'],
-                                                                                                              size: media.width * sixteen,
-                                                                                                              fontweight: FontWeight.w600)
-                                                                                                        ],
-                                                                                                      ),
-                                                                                                    ),
+                                                                                                        child: Row(
+                                                                                                      children: [
+                                                                                                        // Check if the user is private
+                                                                                                        (driverReq['userDetail']?['data']['is_private'] == true)
+                                                                                                            ? // If the user is private, show the payment option
+                                                                                                            Row(
+                                                                                                                children: [
+                                                                                                                  Image.asset(
+                                                                                                                    (driverReq['payment_opt'].toString() == '1')
+                                                                                                                        ? 'assets/images/cash.png'
+                                                                                                                        : (driverReq['payment_opt'].toString() == '2')
+                                                                                                                            ? 'assets/images/wallet.png'
+                                                                                                                            : 'assets/images/card.png',
+                                                                                                                    width: media.width * 0.07,
+                                                                                                                    height: media.width * 0.07,
+                                                                                                                    fit: BoxFit.contain,
+                                                                                                                  ),
+                                                                                                                  SizedBox(
+                                                                                                                    width: media.width * 0.02,
+                                                                                                                  ),
+                                                                                                                  MyText(
+                                                                                                                    text: (driverReq['payment_opt'].toString() == '1')
+                                                                                                                        ? languages[choosenLanguage]['text_cash']
+                                                                                                                        : (driverReq['payment_opt'].toString() == '2')
+                                                                                                                            ? languages[choosenLanguage]['text_wallet']
+                                                                                                                            : languages[choosenLanguage]['text_card'],
+                                                                                                                    size: media.width * sixteen,
+                                                                                                                    fontweight: FontWeight.w600,
+                                                                                                                  ),
+                                                                                                                ],
+                                                                                                              )
+                                                                                                            : MyText(
+                                                                                                                text: "Invoice",
+                                                                                                                size: media.width * sixteen,
+                                                                                                                fontweight: FontWeight.w600,
+                                                                                                              ),
+                                                                                                      ],
+                                                                                                    )),
                                                                                                     SizedBox(
                                                                                                       width: media.width * 0.02,
                                                                                                     ),
@@ -5011,7 +5135,7 @@ class _MapsState extends State<Maps>
                                                                                             ),
                                                                                           ),
                                                                                     SizedBox(
-                                                                                      height: media.height * 0.25,
+                                                                                      height: media.height * 0.02,
                                                                                     ),
                                                                                   ],
                                                                                 ),
@@ -6019,6 +6143,8 @@ class _MapsState extends State<Maps>
                                                             'success') {
                                                           var val =
                                                               await tripStart();
+                                                          d.log(
+                                                              "val======>${val}");
                                                           if (val == 'logout') {
                                                             navigateLogout();
                                                           } else if (val !=

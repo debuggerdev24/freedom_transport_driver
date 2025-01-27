@@ -1,4 +1,4 @@
-package com.freedomtransportdriver.vr
+package com.freedomtransportdriver.app
 
 import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
@@ -33,9 +33,9 @@ class MainActivity: FlutterFragmentActivity() {
         if(bringToForegroundIntent != null){
 startActivity(bringToForegroundIntent);
         }else{
-val launchIntent = getPackageManager().getLaunchIntentForPackage("com.freedomtransportdriver.vr");
+val launchIntent = getPackageManager().getLaunchIntentForPackage("com.freedomtransportdriver.app");
 if (launchIntent != null) { 
-    startActivity(launchIntent);//null pointer check in case com.freedomtransportdriver.vr was not found
+    startActivity(launchIntent);//null pointer check in case com.freedomtransportdriver.app was not found
 }   }
 
     }

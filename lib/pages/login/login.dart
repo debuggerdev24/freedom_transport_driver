@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
@@ -233,6 +234,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       });
     } else {
       setState(() {
+        // log("verify=========>${_error}");
         _error = verify.toString();
       });
     }
@@ -1777,11 +1779,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                         onTap: () async {
                                           setState(() {
                                             _error = '';
+
+                                            log("error ====>${_error}");
                                             loginLoading = true;
                                           });
 
                                           if (newPassword == true) {
                                             if (_newPassword.text.length >= 8) {
+                                              log("newPassword ====>${newPassword}");
                                               var val = await updatePassword(
                                                   _email.text,
                                                   _newPassword.text,
@@ -1923,6 +1928,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                                         .text,
                                                                 _password.text);
                                                         if (val == 'success') {
+                                                          log("val=======>${val}");
                                                           var verify =
                                                               await verifyUser(
                                                                   _email.text,
@@ -2049,6 +2055,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                         resendTimer = 60;
                                                         resend();
                                                       } else {
+                                                        log("otpSent======>${otpSent}");
                                                         var val = await sendOTPtoMobile(
                                                             (signIn == 1)
                                                                 ? _mobile.text
@@ -2109,6 +2116,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                               if (_password.text.isNotEmpty &&
                                                   _password.text.length >= 8 &&
                                                   _email.text.isNotEmpty) {
+                                                log("error23 ====>${_password.text}");
                                                 String pattern =
                                                     r'(^(?:[+0]9)?[0-9]{1,12}$)';
                                                 RegExp regExp = RegExp(pattern);
@@ -2128,6 +2136,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                     (isLoginemail == true &&
                                                         regex.hasMatch(
                                                             _email.text))) {
+                                                  log("_email.text======>${_email.text}");
                                                   var val = await verifyUser(
                                                       _email.text,
                                                       (isLoginemail == true)
@@ -2176,6 +2185,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                             const AggreementPage()));
                                               } else {
                                                 _error = val;
+                                                log("error======>${_error}");
                                               }
                                             } else if (otpSent == false) {
                                               if (_name.text.isNotEmpty &&
@@ -2196,6 +2206,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                     _mobile.text.length >=
                                                         countries[phcode][
                                                             'dial_min_length']) {
+                                                  String fullNumber =
+                                                      '${countries[phcode]['dial_code']}${_mobile.text}';
+                                                  log("Full Phone Number: $fullNumber");
+
                                                   // fd;
                                                   String pattern =
                                                       r"^[a-zA-Z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\.)+[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])*$";
@@ -2207,6 +2221,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                     email = _email.text;
                                                     password = _password.text;
                                                     phnumber = _mobile.text;
+                                                    log("phnumber======>${_mobile.text.length}");
+                                                    log("email======>${email}");
                                                     var verify =
                                                         await verifyUser(
                                                             _mobile.text,
@@ -2215,8 +2231,12 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                             _email.text,
                                                             withOtp,
                                                             forgotPassword);
+                                                    log("API Response for verifyUser: $verify");
+
                                                     if (verify == false) {
+                                                      log("verify${verify.toString()}");
                                                       if (isCheckFireBaseOTP) {
+                                                        log("isCheckFireBaseOTP${isCheckFireBaseOTP.toString()}");
                                                         var val =
                                                             await otpCall();
                                                         if (val.value == true) {
@@ -2265,7 +2285,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                                   title:
                                                                       'Otp for Login',
                                                                   body:
-                                                                      'Login to your account with test OTP 123456');
+                                                                      'Login to your account with 123456');
                                                           showOtpNotification(
                                                               noti);
                                                         }
@@ -2310,8 +2330,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                           _error = val;
                                                         }
                                                       }
-                                                    } else {
-                                                      _error = verify;
                                                     }
                                                   } else {
                                                     _error =
@@ -2331,7 +2349,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                               }
                                             } else {
                                               // iorejie
-
                                               if (_otp.text.isNotEmpty &&
                                                   _otp.text.length == 6) {
                                                 dynamic val;
@@ -2411,6 +2428,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                                     }
                                                   } else {
                                                     mobileVerified = true;
+
                                                     resendTime?.cancel();
                                                     resendTime = null;
                                                     Navigator.push(
@@ -2429,6 +2447,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                           }
                                           setState(() {
                                             loginLoading = false;
+                                            log("loginLoading=======>${loginLoading}");
                                           });
                                         },
                                         text: (signIn == 0)
