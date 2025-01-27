@@ -531,16 +531,14 @@ class _HistoryState extends State<History> {
                                                                 Row(
                                                                   children: [
                                                                     MyText(
-                                                                      text: (myHistory[i]['payment_opt'] ==
-                                                                              '1')
-                                                                          ? languages[choosenLanguage]
-                                                                              [
-                                                                              'text_cash']
-                                                                          : (myHistory[i]['payment_opt'] == '2')
-                                                                              ? languages[choosenLanguage]['text_wallet']
-                                                                              : (myHistory[i]['payment_opt'] == '0')
-                                                                                  ? languages[choosenLanguage]['text_card']
-                                                                                  : '',
+                                                                      text: (myHistory[i]['userDetail']?['data']['is_private'] ==
+                                                                              true) 
+                                                                          ? (myHistory[i]['payment_opt'] == '2') 
+                                                                              ? languages[choosenLanguage]['text_wallet'] 
+                                                                              : (myHistory[i]['payment_opt'] == '0') 
+                                                                                  ? languages[choosenLanguage]['text_card'] 
+                                                                                  : languages[choosenLanguage]['text_card'] 
+                                                                          : "Invoice", 
                                                                       size: media
                                                                               .width *
                                                                           fourteen,

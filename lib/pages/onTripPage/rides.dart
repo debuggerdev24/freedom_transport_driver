@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'package:dash_bubble/dash_bubble.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -191,6 +192,7 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
       bidStream?.cancel();
     }).listen((event) {
       if (driverReq.isEmpty) {
+        log("driverrequet=========>${driverReq}");
         getUserDetails();
         bidStream?.cancel();
         bidStream = null;
@@ -449,6 +451,7 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
                                                           await getLocs();
                                                           if (serviceEnabled ==
                                                               true) {
+                                                            log("serviceEnabled========>${serviceEnabled}");
                                                             setState(() {
                                                               makeOnline = true;
                                                             });
@@ -1422,7 +1425,6 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
                                 ],
                               ),
                             ),
-
                             (driverReq.isEmpty &&
                                     userDetails['role'] != 'owner' &&
                                     userDetails['active'] == true &&
@@ -1437,8 +1439,6 @@ class _RidePageState extends State<RidePage> with WidgetsBindingObserver {
                                       children: [
                                         InkWell(
                                           onTap: () async {
-                                          
-
                                             if (userDetails['transport_type']
                                                     .toString() ==
                                                 'taxi') {

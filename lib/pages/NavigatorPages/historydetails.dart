@@ -137,28 +137,27 @@ class _HistoryDetailsState extends State<HistoryDetails> {
                                                   MainAxisAlignment.end,
                                               children: [
                                                 MyText(
-                                                  text: (myHistory[
-                                                                  selectedHistory]
-                                                              ['payment_opt'] ==
-                                                          '1')
-                                                      ? languages[
-                                                              choosenLanguage]
-                                                          ['text_cash']
-                                                      : (myHistory[selectedHistory]
-                                                                  [
+                                                  text: (myHistory[selectedHistory]
+                                                                      ['userDetail']
+                                                                  ?['data']
+                                                              ['is_private'] ==
+                                                          true)
+                                                      ? (myHistory[selectedHistory][
                                                                   'payment_opt'] ==
-                                                              '2')
-                                                          ? languages[
-                                                                  choosenLanguage]
-                                                              ['text_wallet']
-                                                          : (myHistory[selectedHistory]
-                                                                      [
+                                                              '1')
+                                                          ? languages[choosenLanguage]
+                                                              ['text_cash']
+                                                          : (myHistory[selectedHistory][
                                                                       'payment_opt'] ==
-                                                                  '0')
-                                                              ? languages[
-                                                                      choosenLanguage]
-                                                                  ['text_card']
-                                                              : '',
+                                                                  '2')
+                                                              ? languages[choosenLanguage][
+                                                                  'text_wallet']
+                                                              : (myHistory[selectedHistory]['payment_opt'] ==
+                                                                      '0')
+                                                                  ? languages[choosenLanguage]
+                                                                      ['text_card']
+                                                                  : ''
+                                                      : "Invoice",
                                                   size: media.width * fourteen,
                                                   fontweight: FontWeight.w600,
                                                   color: textColor,
